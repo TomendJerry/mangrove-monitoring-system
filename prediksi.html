@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>Hasil Prediksi AGB & AGC Mangrove</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        /* Gaya CSS ini SAMA PERSIS dengan halaman pemetaan untuk konsistensi */
+
+        body, html {
+            margin: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: #333;
+            background-color: #f4f1ea;
+        }
+
+        .header {
+            background-image: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url("{{ url_for('static', filename='images/mangrove-bg.jpg') }}");
+            background-position: center;
+            background-size: cover;
+            padding: 40px 20px;
+            text-align: center;
+            color: #ffffff;
+        }
+
+        .header h1 {
+            margin: 0;
+            font-size: 2.5em;
+            text-shadow: 2px 2px 5px rgba(0,0,0,0.7);
+        }
+
+        .main-container {
+            padding: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .card {
+            background-color: #ffffff;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+            padding: 25px;
+            border-left: 5px solid #28a745; /* Aksen hijau cerah untuk prediksi */
+        }
+
+        h2 {
+            font-size: 1.6em;
+            color: #083315;
+            border-bottom: 2px solid #e0e0e0;
+            padding-bottom: 10px;
+            margin-top: 0;
+        }
+
+        .status-box {
+            text-align: center;
+        }
+
+        .run-button {
+            background-color: #28a745;
+            color: white;
+            padding: 12px 25px;
+            border: none;
+            border-radius: 50px;
+            font-size: 1.1em;
+            font-weight: bold;
+            cursor: pointer;
+            margin-bottom: 15px;
+            transition: all 0.3s ease;
+        }
+
+        .run-button:hover {
+            background-color: #218838;
+            transform: scale(1.05);
+        }
+
+        .run-button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        #statusMessage {
+            color: #555;
+            font-style: italic;
+        }
+
+        iframe {
+            width: 100%;
+            height: 500px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+
+        .download-links a {
+            color: #A98C6D;
+            text-decoration: none;
+            font-weight: bold;
+            margin-right: 15px;
+        }
+        .download-links a:hover {
+            text-decoration: underline;
+        }
+
+        #data-table {
+            margin-top: 20px;
+            width: 100%;
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            padding: 12px;
+            border: 1px solid #ddd;
+            text-align: left;
+        }
+        th {
+            background-color: #f9f9f9;
+        }
+
+        pre {
+            background-color: #fdfcf9;
+            padding: 15px;
+            border-radius: 5px;
+            border: 1px solid #eee;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            font-size: 1em;
+            line-height: 1.5;
+        }
+
+        .back-link {
+            display: inline-block;
+            margin-top: 20px;
+            padding: 10px 20px;
+            background-color: #083315;
+            color: #F9F5E7;
+            text-decoration: none;
+            border-radius: 50px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+        .back-link:hover {
+            background-color: #A98C6D;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>📈 Hasil Prediksi AGB & AGC</h1>
+    </div>
+
+    <div class="main-container">
+        <div class="card status-box">
+            <h2>Kontrol Analisis</h2>
+            <button id="runButton" class="run-button">Jalankan Ulang Analisis Prediksi</button>
+            <div id="statusMessage">Status saat ini: Siap</div>
+        </div>
+
+        {% if not data_available %}
+        <div class="card">
+            <p>Data hasil analisis belum tersedia. Pastikan proses pemetaan sudah dijalankan, lalu klik tombol "Jalankan Ulang Analisis Prediksi" di atas untuk memulai proses.</p>
+        </div>
+        {% else %}
+        <div class="card">
+            <h2>🗺️ Peta Interaktif Sebaran Prediksi</h2>
+            <iframe src="{{ peta }}"></iframe>
+        </div>
+        
+        <div class="card">
+            <h2>📋 Data Sampel Hasil Prediksi</h2>
+            <div class="download-links">
+                <a onclick="toggleTable()">🔍 Lihat CSV</a> |
+                <a href="{{ url_for('static', filename='output_prediksi_agb_agc.csv') }}" download>⬇️ Download CSV</a>
+            </div>
+            <div id="data-table" style="display: none;">
+                <table>
+                    <tr>
+                        {% for col in columns %}
+                        <th>{{ col }}</th>
+                        {% endfor %}
+                    </tr>
+                    {% for row in data %}
+                    <tr>
+                        {% for col in columns %}
+                        <td>{{ row[col] }}</td>
+                        {% endfor %}
+                    </tr>
+                    {% endfor %}
+                </table>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>📊 Statistik & Kesimpulan Prediksi</h2>
+            <pre>{{ statistik }}</pre>
+        </div>
+        {% endif %}
+
+        <a href="{{ url_for('home') }}" class="back-link">⬅ Kembali ke Menu Utama</a>
+    </div>
+
+<script>
+    const runButton = document.getElementById('runButton');
+    const statusMessage = document.getElementById('statusMessage');
+    let pollingInterval;
+
+    function startPolling() {
+        if (pollingInterval) {
+            clearInterval(pollingInterval);
+        }
+
+        pollingInterval = setInterval(async () => {
+            try {
+                // == BAGIAN YANG DIUBAH (JAVASCRIPT) ==
+                // Endpoint diubah ke '/status/prediksi'
+                const response = await fetch('/status/prediksi');
+                const data = await response.json();
+
+                statusMessage.textContent = `Status: ${data.message}`;
+
+                if (data.status === 'running') {
+                    runButton.disabled = true;
+                    runButton.textContent = "Sedang Memproses...";
+                } else {
+                    runButton.disabled = false;
+                    // Teks tombol diubah
+                    runButton.textContent = "Jalankan Ulang Analisis Prediksi";
+                    clearInterval(pollingInterval);
+                    
+                    if (data.status === 'completed') {
+                        statusMessage.textContent = 'Status: Selesai! Halaman akan dimuat ulang...';
+                        setTimeout(() => window.location.reload(), 2000);
+                    }
+                }
+            } catch (error) {
+                statusMessage.textContent = 'Gagal mengecek status.';
+                clearInterval(pollingInterval);
+            }
+        }, 3000);
+    }
+
+    runButton.addEventListener('click', async () => {
+        runButton.disabled = true;
+        statusMessage.textContent = 'Mengirim permintaan untuk memulai proses...';
+
+        try {
+            // == BAGIAN YANG DIUBAH (JAVASCRIPT) ==
+            // Endpoint diubah ke '/run/prediksi'
+            const response = await fetch('/run/prediksi', { method: 'POST' });
+            const data = await response.json();
+            
+            if (response.ok) {
+                statusMessage.textContent = `Status: ${data.message}`;
+                startPolling();
+            } else {
+                statusMessage.textContent = `Error: ${data.message}`;
+                runButton.disabled = false;
+            }
+        } catch (error) {
+            statusMessage.textContent = 'Gagal memulai proses. Cek konsol server.';
+            runButton.disabled = false;
+        }
+    });
+
+    startPolling();
+
+    function toggleTable() {
+        const table = document.getElementById("data-table");
+        table.style.display = (table.style.display === "none") ? "block" : "none";
+    }
+</script>
+</body>
+</html>
